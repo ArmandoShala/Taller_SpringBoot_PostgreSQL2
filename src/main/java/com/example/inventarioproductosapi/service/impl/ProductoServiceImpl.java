@@ -1,5 +1,6 @@
 package com.example.inventarioproductosapi.service.impl;
 
+import com.example.inventarioproductosapi.exception.DuplicateResourceException;
 import com.example.inventarioproductosapi.exception.ResourceNotFoundException;
 import com.example.inventarioproductosapi.model.Producto;
 import com.example.inventarioproductosapi.repository.ProductoRepository;
@@ -76,16 +77,14 @@ public class ProductoServiceImpl implements ProductoService {
 
     private void validarSkuUnicoParaCreacion(String sku) {
         if (productoRepository.existsBySku(sku)) {
-            // TODO: reemplazar por excepción personalizada de negocio (ej: DuplicatedSkuException).
-            throw new IllegalArgumentException("Ya existe un producto con el SKU: " + sku);
+            throw new DuplicateResourceException("Ya existe un producto con el SKU: " + sku);
         }
     }
 
     private void validarSkuUnicoEnActualizacion(Producto productoExistente, String nuevoSku) {
         boolean cambioSku = !productoExistente.getSku().equals(nuevoSku);
         if (cambioSku && productoRepository.existsBySku(nuevoSku)) {
-            // TODO: reemplazar por excepción personalizada de negocio (ej: DuplicatedSkuException).
-            throw new IllegalArgumentException("Ya existe otro producto con el SKU: " + nuevoSku);
+            throw new DuplicateResourceException("Ya existe otro producto con el SKU: " + nuevoSku);
         }
     }
 }
