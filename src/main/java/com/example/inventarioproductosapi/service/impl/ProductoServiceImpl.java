@@ -8,6 +8,7 @@ import com.example.inventarioproductosapi.service.ProductoService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class ProductoServiceImpl implements ProductoService {
@@ -82,7 +83,7 @@ public class ProductoServiceImpl implements ProductoService {
     }
 
     private void validarSkuUnicoEnActualizacion(Producto productoExistente, String nuevoSku) {
-        boolean cambioSku = !productoExistente.getSku().equals(nuevoSku);
+        boolean cambioSku = !Objects.equals(productoExistente.getSku(), nuevoSku);
         if (cambioSku && productoRepository.existsBySku(nuevoSku)) {
             throw new DuplicateResourceException("Ya existe otro producto con el SKU: " + nuevoSku);
         }
