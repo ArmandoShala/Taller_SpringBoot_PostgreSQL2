@@ -3,8 +3,8 @@ package com.example.inventarioproductosapi.controller;
 import com.example.inventarioproductosapi.model.Producto;
 import com.example.inventarioproductosapi.service.ProductoService;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -12,42 +12,60 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
-@RequestMapping("/api/productos")
-@RequiredArgsConstructor
+@RequestMapping("/productos")
 public class ProductoController {
 
     private final ProductoService productoService;
 
+    public ProductoController(ProductoService productoService) {
+        this.productoService = productoService;
+    }
+
     @GetMapping
-    public List<Producto> listarTodos() {
-        return productoService.listarTodos();
+    public ResponseEntity<List<Producto>> listarTodos() {
+        return ResponseEntity.ok(productoService.listarTodos());
     }
 
     @GetMapping("/{id}")
-    public Producto obtenerPorId(@PathVariable Long id) {
-        return productoService.obtenerPorId(id);
+    public ResponseEntity<Producto> obtenerPorId(@PathVariable Long id) {
+        return ResponseEntity.ok(productoService.obtenerPorId(id));
     }
 
     @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public Producto crear(@Valid @RequestBody Producto producto) {
-        return productoService.crear(producto);
+    public ResponseEntity<Producto> crear(@Valid @RequestBody Producto producto) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(productoService.crear(producto));
     }
 
     @PutMapping("/{id}")
-    public Producto actualizar(@PathVariable Long id, @Valid @RequestBody Producto producto) {
-        return productoService.actualizar(id, producto);
+    public ResponseEntity<Producto> actualizar(@PathVariable Long id, @Valid @RequestBody Producto producto) {
+        return ResponseEntity.ok(productoService.actualizar(id, producto));
     }
 
     @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void eliminar(@PathVariable Long id) {
+    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
         productoService.eliminar(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/max/precio")
+    public ResponseEntity<Producto> obtenerProductoConMayorPrecio() {
+        return ResponseEntity.ok(productoService.obtenerProductoConMayorPrecio());
+    }
+
+    @GetMapping("/categoria/{categoria}")
+    public ResponseEntity<List<Producto>> obtenerPorCategoria(@PathVariable String categoria) {
+        return ResponseEntity.ok(productoService.obtenerPorCategoria(categoria));
+    }
+
+    @GetMapping("/en/stock")
+    public ResponseEntity<Map<String, Long>> contarProductosEnStock() {
+        long productosEnStock = productoService.contarProductosEnStock();
+        return ResponseEntity.ok(Map.of("productosEnStock", productosEnStock));
     }
 }
