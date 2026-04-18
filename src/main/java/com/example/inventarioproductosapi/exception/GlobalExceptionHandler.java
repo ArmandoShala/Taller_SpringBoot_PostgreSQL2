@@ -14,41 +14,43 @@ import java.util.Map;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleResourceNotFound(ResourceNotFoundException ex) {
-        Map<String, Object> error = new HashMap<>();
-        error.put("timestamp", LocalDateTime.now());
-        error.put("status", HttpStatus.NOT_FOUND.value());
-        error.put("error", "Not Found");
-        error.put("message", ex.getMessage());
-
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    public ResponseEntity<ApiErrorResponse> handleResourceNotFound(ResourceNotFoundException ex) {
+        return buildErrorResponse(ex.getMessage(), HttpStatus.NOT_FOUND);
     }
 
-
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<Map<String, Object>> handleIllegalArgument(IllegalArgumentException ex) {
-        Map<String, Object> error = new HashMap<>();
-        error.put("timestamp", LocalDateTime.now());
-        error.put("status", HttpStatus.BAD_REQUEST.value());
-        error.put("error", "Bad Request");
-        error.put("message", ex.getMessage());
-
-        return ResponseEntity.badRequest().body(error);
+    @ExceptionHandler(DuplicateResourceException.class)
+    public ResponseEntity<ApiErrorResponse> handleDuplicateResource(DuplicateResourceException ex) {
+        return buildErrorResponse(ex.getMessage(), HttpStatus.CONFLICT);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, Object>> handleValidationErrors(MethodArgumentNotValidException ex) {
-        Map<String, Object> error = new HashMap<>();
-        error.put("timestamp", LocalDateTime.now());
-        error.put("status", HttpStatus.BAD_REQUEST.value());
-        error.put("error", "Bad Request");
-
-        Map<String, String> fieldErrors = new HashMap<>();
+    public ResponseEntity<ApiErrorResponse> handleValidationErrors(MethodArgumentNotValidException ex) {
+        Map<String, String> errores = new HashMap<>();
         ex.getBindingResult().getFieldErrors().forEach(fieldError ->
-                fieldErrors.put(fieldError.getField(), fieldError.getDefaultMessage())
+                errores.put(fieldError.getField(), fieldError.getDefaultMessage())
         );
-        error.put("messages", fieldErrors);
 
-        return ResponseEntity.badRequest().body(error);
+        ApiErrorResponse response = new ApiErrorResponse(
+                "Error de validación en los datos enviados.",
+                HttpStatus.BAD_REQUEST.value(),
+                LocalDateTime.now(),
+                errores
+        );
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiErrorResponse> handleGenericException(Exception ex) {
+        return buildErrorResponse("Ha ocurrido un error interno en el servidor.", HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    private ResponseEntity<ApiErrorResponse> buildErrorResponse(String mensaje, HttpStatus status) {
+        ApiErrorResponse response = new ApiErrorResponse(
+                mensaje,
+                status.value(),
+                LocalDateTime.now()
+        );
+        return ResponseEntity.status(status).body(response);
     }
 }
