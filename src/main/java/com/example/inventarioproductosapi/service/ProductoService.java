@@ -15,4 +15,10 @@ public interface ProductoService {
     Producto actualizar(Long id, Producto producto);
 
     void eliminar(Long id);
+
+    Producto obtenerProductoConMayorPrecio();
+
+    List<Producto> obtenerPorCategoria(String categoria);
+
+    long contarProductosEnStock();
 }

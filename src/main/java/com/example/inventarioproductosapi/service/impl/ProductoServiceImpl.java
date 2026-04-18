@@ -4,16 +4,18 @@ import com.example.inventarioproductosapi.exception.ResourceNotFoundException;
 import com.example.inventarioproductosapi.model.Producto;
 import com.example.inventarioproductosapi.repository.ProductoRepository;
 import com.example.inventarioproductosapi.service.ProductoService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 public class ProductoServiceImpl implements ProductoService {
 
     private final ProductoRepository productoRepository;
+
+    public ProductoServiceImpl(ProductoRepository productoRepository) {
+        this.productoRepository = productoRepository;
+    }
 
     @Override
     public List<Producto> listarTodos() {
@@ -28,6 +30,7 @@ public class ProductoServiceImpl implements ProductoService {
 
     @Override
     public Producto crear(Producto producto) {
+        validarSkuUnicoParaCreacion(producto.getSku());
         return productoRepository.save(producto);
     }
 
@@ -35,10 +38,16 @@ public class ProductoServiceImpl implements ProductoService {
     public Producto actualizar(Long id, Producto producto) {
         Producto productoExistente = obtenerPorId(id);
 
+        validarSkuUnicoEnActualizacion(productoExistente, producto.getSku());
+
         productoExistente.setNombre(producto.getNombre());
         productoExistente.setDescripcion(producto.getDescripcion());
         productoExistente.setPrecio(producto.getPrecio());
+        productoExistente.setCategoria(producto.getCategoria());
         productoExistente.setStock(producto.getStock());
+        productoExistente.setSku(producto.getSku());
+        productoExistente.setFabricante(producto.getFabricante());
+        // No se actualiza id ni fechaIngreso para preservar datos originales.
 
         return productoRepository.save(productoExistente);
     }
@@ -47,5 +56,36 @@ public class ProductoServiceImpl implements ProductoService {
     public void eliminar(Long id) {
         Producto productoExistente = obtenerPorId(id);
         productoRepository.delete(productoExistente);
+    }
+
+    @Override
+    public Producto obtenerProductoConMayorPrecio() {
+        return productoRepository.findTopByOrderByPrecioDesc()
+                .orElseThrow(() -> new ResourceNotFoundException("No hay productos registrados."));
+    }
+
+    @Override
+    public List<Producto> obtenerPorCategoria(String categoria) {
+        return productoRepository.findByCategoriaIgnoreCase(categoria);
+    }
+
+    @Override
+    public long contarProductosEnStock() {
+        return productoRepository.countByStockGreaterThan(0);
+    }
+
+    private void validarSkuUnicoParaCreacion(String sku) {
+        if (productoRepository.existsBySku(sku)) {
+            // TODO: reemplazar por excepción personalizada de negocio (ej: DuplicatedSkuException).
+            throw new IllegalArgumentException("Ya existe un producto con el SKU: " + sku);
+        }
+    }
+
+    private void validarSkuUnicoEnActualizacion(Producto productoExistente, String nuevoSku) {
+        boolean cambioSku = !productoExistente.getSku().equals(nuevoSku);
+        if (cambioSku && productoRepository.existsBySku(nuevoSku)) {
+            // TODO: reemplazar por excepción personalizada de negocio (ej: DuplicatedSkuException).
+            throw new IllegalArgumentException("Ya existe otro producto con el SKU: " + nuevoSku);
+        }
     }
 }
