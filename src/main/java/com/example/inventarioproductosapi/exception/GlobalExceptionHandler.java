@@ -1,5 +1,6 @@
 package com.example.inventarioproductosapi.exception;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -21,6 +22,12 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DuplicateResourceException.class)
     public ResponseEntity<ApiErrorResponse> handleDuplicateResource(DuplicateResourceException ex) {
         return buildResponse(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ApiErrorResponse> handleDataIntegrity(DataIntegrityViolationException ex) {
+        return buildResponse(HttpStatus.CONFLICT,
+                "Conflicto de integridad de datos. Verifique valores únicos y campos obligatorios.");
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

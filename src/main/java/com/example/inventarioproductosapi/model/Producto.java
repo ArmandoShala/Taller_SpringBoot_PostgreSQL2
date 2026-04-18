@@ -5,20 +5,24 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "productos") // Mapea esta entidad a la tabla productos en PostgreSQL.
-@Data
+@Table(name = "productos")
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -39,20 +43,32 @@ public class Producto {
     @Column(nullable = false)
     private Double precio;
 
-    @NotBlank(message = "La categoria es obligatoria")
+    @NotBlank(message = "La categoría es obligatoria")
     @Column(nullable = false)
     private String categoria;
 
-    @Builder.Default
-    private Integer stock = 0; // Valor por defecto cuando no se envía en la creación.
-
-    @NotBlank(message = "El sku es obligatorio")
-    @Column(unique = true, nullable = false) // Fuerza unicidad de SKU a nivel de BD.
-    private String sku;
-
+    @NotNull(message = "El stock es obligatorio")
+    @PositiveOrZero(message = "El stock no puede ser negativo")
     @Builder.Default
     @Column(nullable = false)
-    private LocalDateTime fechaIngreso = LocalDateTime.now();
+    private Integer stock = 0;
+
+    @NotBlank(message = "El SKU es obligatorio")
+    @Column(unique = true, nullable = false)
+    private String sku;
+
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime fechaIngreso;
 
     private String fabricante;
+
+    @PrePersist
+    public void prePersist() {
+        if (fechaIngreso == null) {
+            fechaIngreso = LocalDateTime.now();
+        }
+        if (stock == null) {
+            stock = 0;
+        }
+    }
 }
