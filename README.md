@@ -1,25 +1,178 @@
-# Guía de prueba rápida — API de Inventario de Productos
+# Inventario de Productos API
 
-> Base URL local sugerida: `http://localhost:8080`
-
-## 1) Endpoints disponibles
-
-| Método | URL | Descripción |
-|---|---|---|
-| GET | `/productos` | Lista todos los productos. |
-| GET | `/productos/{id}` | Obtiene un producto por su ID. |
-| POST | `/productos` | Crea un nuevo producto. |
-| PUT | `/productos/{id}` | Actualiza un producto existente por ID. |
-| DELETE | `/productos/{id}` | Elimina un producto por ID. |
-| GET | `/productos/max/precio` | Obtiene el producto con mayor precio. |
-| GET | `/productos/categoria/{categoria}` | Lista productos filtrados por categoría (ignorando mayúsculas/minúsculas). |
-| GET | `/productos/en/stock` | Devuelve la cantidad de productos con stock mayor a 0. |
+API REST desarrollada con **Spring Boot + PostgreSQL** para gestionar un inventario de productos mediante operaciones CRUD, validaciones de negocio y consultas avanzadas.
 
 ---
 
-## 2) Ejemplos de body JSON (POST y PUT)
+## 1) Descripción
 
-### POST `/productos` (crear)
+Este proyecto implementa un backend orientado a la gestión de productos con las siguientes capacidades:
+
+- Alta, consulta, actualización y eliminación de productos.
+- Validación de campos obligatorios (nombre, categoría, precio, stock, SKU).
+- Control de unicidad de SKU.
+- Manejo global de errores con respuestas JSON consistentes.
+- Carga inicial de datos de ejemplo para pruebas rápidas.
+
+La API está pensada para prácticas de desarrollo backend con arquitectura por capas (**Controller / Service / Repository**) usando Spring Data JPA.
+
+---
+
+## 2) Tecnologías usadas
+
+- **Java 17**
+- **Spring Boot 3.3.5**
+- **Spring Web**
+- **Spring Data JPA**
+- **Spring Validation**
+- **PostgreSQL**
+- **Maven**
+- **Lombok**
+
+---
+
+## 3) Requisitos previos
+
+Antes de ejecutar el proyecto, asegúrate de tener instalado:
+
+- **JDK 17**
+- **Maven 3.9+** (o usar el Maven de tu entorno)
+- **PostgreSQL 14+** (recomendado)
+- Un cliente para probar endpoints (Postman, Insomnia o cURL)
+
+Verificación rápida:
+
+```bash
+java -version
+mvn -version
+psql --version
+```
+
+---
+
+## 4) Configuración de PostgreSQL
+
+La aplicación usa estas variables en `application.properties` (con valores por defecto):
+
+- `DB_URL` → `jdbc:postgresql://localhost:5432/inventario_db`
+- `DB_USERNAME` → `postgres`
+- `DB_PASSWORD` → `postgres`
+
+### 4.1 Crear base de datos
+
+```sql
+CREATE DATABASE inventario_db;
+```
+
+### 4.2 Configurar credenciales (opcional)
+
+Puedes exportar variables de entorno antes de iniciar la app:
+
+```bash
+export DB_URL=jdbc:postgresql://localhost:5432/inventario_db
+export DB_USERNAME=postgres
+export DB_PASSWORD=postgres
+```
+
+> La app está configurada con `spring.jpa.hibernate.ddl-auto=update` y `spring.sql.init.mode=always`, por lo que crea/actualiza la tabla y carga datos desde `data.sql` al iniciar.
+
+---
+
+## 5) Cómo ejecutar el proyecto
+
+Desde la raíz del repositorio:
+
+```bash
+mvn spring-boot:run
+```
+
+La API quedará disponible por defecto en:
+
+```text
+http://localhost:8080
+```
+
+### 5.1 Empaquetar y ejecutar JAR
+
+```bash
+mvn clean package
+java -jar target/inventario-productos-api-0.0.1-SNAPSHOT.jar
+```
+
+---
+
+## 6) Estructura del proyecto
+
+```text
+src/main/java/com/example/inventarioproductosapi
+├── controller
+│   └── ProductoController.java
+├── service
+│   ├── ProductoService.java
+│   └── impl
+│       └── ProductoServiceImpl.java
+├── repository
+│   └── ProductoRepository.java
+├── model
+│   └── Producto.java
+├── exception
+│   ├── ApiErrorResponse.java
+│   ├── DuplicateResourceException.java
+│   ├── ResourceNotFoundException.java
+│   └── GlobalExceptionHandler.java
+└── InventarioProductosApiApplication.java
+
+src/main/resources
+├── application.properties
+└── data.sql
+```
+
+---
+
+## 7) Endpoints
+
+Base URL: `http://localhost:8080`
+
+| Método | Endpoint | Descripción |
+|---|---|---|
+| GET | `/productos` | Listar todos los productos |
+| GET | `/productos/{id}` | Obtener producto por ID |
+| POST | `/productos` | Crear producto |
+| PUT | `/productos/{id}` | Actualizar producto |
+| DELETE | `/productos/{id}` | Eliminar producto |
+| GET | `/productos/max/precio` | Obtener producto con mayor precio |
+| GET | `/productos/categoria/{categoria}` | Filtrar por categoría (case-insensitive) |
+| GET | `/productos/en/stock` | Contar productos con stock > 0 |
+
+---
+
+## 8) Consultas avanzadas implementadas
+
+Además del CRUD, el repositorio implementa consultas derivadas de Spring Data JPA:
+
+1. **Producto con mayor precio**
+   - Método: `findTopByOrderByPrecioDesc()`
+   - Endpoint: `GET /productos/max/precio`
+
+2. **Filtrado por categoría sin importar mayúsculas/minúsculas**
+   - Método: `findByCategoriaIgnoreCase(String categoria)`
+   - Endpoint: `GET /productos/categoria/{categoria}`
+
+3. **Conteo de productos con stock disponible**
+   - Método: `countByStockGreaterThan(0)`
+   - Endpoint: `GET /productos/en/stock`
+
+4. **Validación de SKU único en creación/actualización**
+   - Método: `existsBySku(String sku)`
+   - Resultado: evita duplicados y responde con `409 Conflict`
+
+---
+
+## 9) Ejemplos de uso
+
+### 9.1 Crear producto (POST `/productos`)
+
+**Request**
 
 ```json
 {
@@ -33,43 +186,7 @@
 }
 ```
 
-### PUT `/productos/{id}` (actualizar)
-
-```json
-{
-  "nombre": "Monitor 27 4K HDR",
-  "descripcion": "Monitor IPS 4K con HDR10",
-  "precio": 549.99,
-  "categoria": "Tecnología",
-  "stock": 8,
-  "sku": "SKU-TEC-900",
-  "fabricante": "VisionPro"
-}
-```
-
-> Nota: para `PUT`, envía todos los campos editables. `id` y `fechaIngreso` no se modifican desde la API.
-
----
-
-## 3) Ejemplos de respuesta esperada
-
-### Éxito — GET `/productos/1` (200 OK)
-
-```json
-{
-  "id": 1,
-  "nombre": "Laptop Pro 16",
-  "descripcion": "Portátil de alto rendimiento para edición y desarrollo",
-  "precio": 2899.99,
-  "categoria": "Tecnología",
-  "stock": 5,
-  "sku": "SKU-TEC-001",
-  "fechaIngreso": "2026-04-18T12:30:45.123",
-  "fabricante": "NovaTech"
-}
-```
-
-### Éxito — POST `/productos` (201 Created)
+**Response (201 Created)**
 
 ```json
 {
@@ -85,11 +202,53 @@
 }
 ```
 
-### Éxito — DELETE `/productos/9` (204 No Content)
+---
 
-Sin cuerpo de respuesta.
+### 9.2 Actualizar producto (PUT `/productos/{id}`)
 
-### Éxito — GET `/productos/en/stock` (200 OK)
+**Request**
+
+```json
+{
+  "nombre": "Monitor 27 4K HDR",
+  "descripcion": "Monitor IPS 4K con HDR10",
+  "precio": 549.99,
+  "categoria": "Tecnología",
+  "stock": 8,
+  "sku": "SKU-TEC-900",
+  "fabricante": "VisionPro"
+}
+```
+
+**Nota:** `id` y `fechaIngreso` no se actualizan desde la API.
+
+---
+
+### 9.3 Consultar por categoría (GET `/productos/categoria/Tecnología`)
+
+**Response (200 OK)**
+
+```json
+[
+  {
+    "id": 1,
+    "nombre": "Laptop Pro 16",
+    "descripcion": "Portátil de alto rendimiento para edición y desarrollo",
+    "precio": 2899.99,
+    "categoria": "Tecnología",
+    "stock": 5,
+    "sku": "SKU-TEC-001",
+    "fechaIngreso": "2026-04-18T12:30:45.123",
+    "fabricante": "NovaTech"
+  }
+]
+```
+
+---
+
+### 9.4 Contar productos en stock (GET `/productos/en/stock`)
+
+**Response (200 OK)**
 
 ```json
 {
@@ -99,81 +258,37 @@ Sin cuerpo de respuesta.
 
 ---
 
-## 4) Ejemplos cURL por endpoint
-
-### GET `/productos`
+### 9.5 Ejemplos cURL rápidos
 
 ```bash
+# Listar todos
 curl -X GET "http://localhost:8080/productos"
-```
 
-### GET `/productos/{id}`
-
-```bash
+# Obtener por ID
 curl -X GET "http://localhost:8080/productos/1"
-```
 
-### POST `/productos`
-
-```bash
+# Crear
 curl -X POST "http://localhost:8080/productos" \
   -H "Content-Type: application/json" \
   -d '{
-    "nombre": "Monitor 27 4K",
-    "descripcion": "Monitor IPS 4K para diseño",
-    "precio": 499.99,
+    "nombre": "Teclado Mecánico",
+    "descripcion": "Switches táctiles",
+    "precio": 120.50,
     "categoria": "Tecnología",
-    "stock": 10,
-    "sku": "SKU-TEC-900",
-    "fabricante": "VisionPro"
+    "stock": 15,
+    "sku": "SKU-TEC-901",
+    "fabricante": "KeyPro"
   }'
-```
 
-### PUT `/productos/{id}`
-
-```bash
-curl -X PUT "http://localhost:8080/productos/9" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "nombre": "Monitor 27 4K HDR",
-    "descripcion": "Monitor IPS 4K con HDR10",
-    "precio": 549.99,
-    "categoria": "Tecnología",
-    "stock": 8,
-    "sku": "SKU-TEC-900",
-    "fabricante": "VisionPro"
-  }'
-```
-
-### DELETE `/productos/{id}`
-
-```bash
-curl -X DELETE "http://localhost:8080/productos/9"
-```
-
-### GET `/productos/max/precio`
-
-```bash
-curl -X GET "http://localhost:8080/productos/max/precio"
-```
-
-### GET `/productos/categoria/{categoria}`
-
-```bash
-curl -X GET "http://localhost:8080/productos/categoria/Tecnología"
-```
-
-### GET `/productos/en/stock`
-
-```bash
-curl -X GET "http://localhost:8080/productos/en/stock"
+# Eliminar
+curl -X DELETE "http://localhost:8080/productos/1"
 ```
 
 ---
 
-## 5) Casos de error esperados
+## 10) Posibles errores y cómo interpretarlos
 
-La API devuelve errores estructurados como:
+La API devuelve errores en formato JSON:
 
 ```json
 {
@@ -186,15 +301,31 @@ La API devuelve errores estructurados como:
 }
 ```
 
-> En errores de negocio (`404`, `409`) puede venir sin `errores`, solo con `mensaje`, `status` y `timestamp`.
+> En errores de negocio (`404`, `409`) el campo `errores` puede no aparecer.
 
-### A) ID no encontrado
+### 10.1 `400 Bad Request` (error de validación)
 
-**Caso:** GET `/productos/9999` (o PUT/DELETE con un ID inexistente)
+Ocurre cuando faltan campos obligatorios o tienen formato/valor inválido.
 
-**HTTP:** `404 Not Found`
+Ejemplo:
 
-**Ejemplo respuesta:**
+```json
+{
+  "mensaje": "Error de validación en la solicitud",
+  "status": 400,
+  "timestamp": "2026-04-18T12:43:00.000",
+  "errores": {
+    "precio": "El precio debe ser mayor a 0",
+    "nombre": "El nombre es obligatorio"
+  }
+}
+```
+
+### 10.2 `404 Not Found`
+
+Ocurre cuando se consulta/actualiza/elimina un ID inexistente.
+
+Ejemplo:
 
 ```json
 {
@@ -204,13 +335,11 @@ La API devuelve errores estructurados como:
 }
 ```
 
-### B) SKU duplicado
+### 10.3 `409 Conflict`
 
-**Caso:** POST `/productos` con `sku` ya existente (ejemplo: `SKU-TEC-001`)
+Ocurre cuando hay conflicto de integridad, por ejemplo SKU duplicado.
 
-**HTTP:** `409 Conflict`
-
-**Ejemplo respuesta:**
+Ejemplo:
 
 ```json
 {
@@ -220,40 +349,18 @@ La API devuelve errores estructurados como:
 }
 ```
 
-### C) Precio inválido
+### 10.4 `500 Internal Server Error`
 
-**Caso:** POST/PUT con `precio <= 0` o `precio` nulo
+Error inesperado del servidor. Revisar logs de aplicación y conexión a base de datos.
 
-**HTTP:** `400 Bad Request`
+---
 
-**Ejemplo respuesta (`precio` en 0):**
+## 11) Datos iniciales
 
-```json
-{
-  "mensaje": "Error de validación en la solicitud",
-  "status": 400,
-  "timestamp": "2026-04-18T12:43:00.000",
-  "errores": {
-    "precio": "El precio debe ser mayor a 0"
-  }
-}
-```
+Al iniciar la aplicación se insertan productos de ejemplo desde `src/main/resources/data.sql` para poder probar los endpoints inmediatamente.
 
-### D) Nombre vacío
+---
 
-**Caso:** POST/PUT con `nombre` vacío o espacios
+## 12) Licencia
 
-**HTTP:** `400 Bad Request`
-
-**Ejemplo respuesta:**
-
-```json
-{
-  "mensaje": "Error de validación en la solicitud",
-  "status": 400,
-  "timestamp": "2026-04-18T12:44:00.000",
-  "errores": {
-    "nombre": "El nombre es obligatorio"
-  }
-}
-```
+Este proyecto incluye archivo `LICENSE` en la raíz del repositorio.
