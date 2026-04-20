@@ -1,4 +1,4 @@
-package com.example.inventarioproductosapi.exception;
+package Producto.demo.helpers;
 
 public class ResourceNotFoundException extends RuntimeException {
 

@@ -1,10 +1,9 @@
-package com.example.inventarioproductosapi.service.impl;
+package Producto.demo.persona.service;
 
-import com.example.inventarioproductosapi.exception.DuplicateResourceException;
-import com.example.inventarioproductosapi.exception.ResourceNotFoundException;
-import com.example.inventarioproductosapi.model.Producto;
-import com.example.inventarioproductosapi.repository.ProductoRepository;
-import com.example.inventarioproductosapi.service.ProductoService;
+import Producto.demo.persona.repository.ProductoRepository;
+import Producto.demo.helpers.DuplicateResourceException;
+import Producto.demo.helpers.ResourceNotFoundException;
+import Producto.demo.persona.entity.Producto;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

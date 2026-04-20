@@ -1,7 +1,7 @@
-package com.example.inventarioproductosapi.controller;
+package Producto.demo.persona.controller;
 
-import com.example.inventarioproductosapi.model.Producto;
-import com.example.inventarioproductosapi.service.ProductoService;
+import Producto.demo.persona.entity.Producto;
+import Producto.demo.persona.service.ProductoService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

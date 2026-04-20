@@ -1,6 +1,6 @@
-package com.example.inventarioproductosapi.repository;
+package Producto.demo.persona.repository;
 
-import com.example.inventarioproductosapi.model.Producto;
+import Producto.demo.persona.entity.Producto;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

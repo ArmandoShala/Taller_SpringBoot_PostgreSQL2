@@ -1,4 +1,4 @@
-package com.example.inventarioproductosapi.model;
+package Producto.demo.persona.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

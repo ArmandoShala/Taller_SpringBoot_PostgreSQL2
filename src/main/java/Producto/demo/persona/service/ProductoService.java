@@ -1,6 +1,6 @@
-package com.example.inventarioproductosapi.service;
+package Producto.demo.persona.service;
 
-import com.example.inventarioproductosapi.model.Producto;
+import Producto.demo.persona.entity.Producto;
 
 import java.util.List;
 

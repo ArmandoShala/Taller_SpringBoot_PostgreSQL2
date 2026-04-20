@@ -1,4 +1,4 @@
-package com.example.inventarioproductosapi;
+package Producto.demo;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

@@ -1,4 +1,4 @@
-package com.example.inventarioproductosapi.exception;
+package Producto.demo.helpers;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;

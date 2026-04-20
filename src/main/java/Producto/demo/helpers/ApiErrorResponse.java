@@ -1,4 +1,4 @@
-package com.example.inventarioproductosapi.exception;
+package Producto.demo.helpers;
 
 import lombok.Builder;
 import lombok.Getter;
